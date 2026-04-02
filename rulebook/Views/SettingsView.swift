@@ -14,6 +14,17 @@ struct SettingsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 32) {
+                // Title header
+                HStack {
+                    Text("Settings")
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundStyle(themeManager.textPrimary)
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                .padding(.bottom, 8)
+                
                 // Appearance section
                 settingsSection(title: "Appearance") {
                     settingsRow(
@@ -75,8 +86,6 @@ struct SettingsView: View {
             .padding(.top, 8)
         }
         .background(themeManager.backgroundPrimary)
-        .navigationTitle("Settings")
-        .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             // Check authorization status when view appears
             Task {

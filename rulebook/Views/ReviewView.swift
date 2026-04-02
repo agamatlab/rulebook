@@ -14,6 +14,17 @@ struct ReviewView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
+                // Title header
+                HStack {
+                    Text("Review")
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundStyle(themeManager.textPrimary)
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                .padding(.bottom, 8)
+                
                 // Weekly Review Link (NEW - with ML insights and graph)
                 NavigationLink(destination: WeeklyReviewView()) {
                     HStack(spacing: 16) {
@@ -77,8 +88,6 @@ struct ReviewView: View {
             }
         }
         .background(themeManager.backgroundPrimary)
-        .navigationTitle("Review")
-        .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             calculateStats()
             generateInsights()

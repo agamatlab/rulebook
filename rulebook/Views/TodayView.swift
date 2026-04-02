@@ -390,12 +390,25 @@ struct TodayView: View {
                                 isDisabled: false,
                                 onTap: {}
                             )
+                            .environmentObject(themeManager)
                         }
                         .buttonStyle(.plain)
                     }
                 }
                 .padding(.horizontal, 20)
             }
+            .mask(
+                LinearGradient(
+                    gradient: Gradient(stops: [
+                        .init(color: .clear, location: 0),
+                        .init(color: .black, location: 0.05),
+                        .init(color: .black, location: 0.95),
+                        .init(color: .clear, location: 1)
+                    ]),
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
         }
     }
     
