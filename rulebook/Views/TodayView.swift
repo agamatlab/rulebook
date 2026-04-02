@@ -391,6 +391,7 @@ struct TodayView: View {
                                 onTap: {}
                             )
                             .environmentObject(themeManager)
+                            .id("\(category.id)-\(themeManager.currentTheme.id)")
                         }
                         .buttonStyle(.plain)
                     }
