@@ -47,10 +47,20 @@ struct TodayView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
+                // Title header
+                HStack {
+                    Text(isToday ? "Today" : dateTitle)
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundStyle(themeManager.textPrimary)
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                .padding(.bottom, 8)
+                
                 // Date selector
                 dateSelector
                     .padding(.horizontal, 20)
-                    .padding(.top, 8)
                     .padding(.bottom, 16)
                 
                 // Hero card
@@ -82,7 +92,6 @@ struct TodayView: View {
         }
         .background(theme.backgroundPrimaryColor)
         .scrollIndicators(.hidden)
-        .navigationTitle(isToday ? "Today" : dateTitle)
         .sheet(item: $selectedRule) { rule in
             DailyCheckInSheet(rule: rule) { kept, notRelevant in
                 if !notRelevant {
