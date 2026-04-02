@@ -9,7 +9,6 @@ struct SettingsView: View {
     @StateObject private var reminderManager = DailyReminderManager.shared
     @State private var showThemePicker = false
     @State private var showManageCategories = false
-    @State private var reducedMotion = false
     @State private var showNotificationTimePicker = false
     
     var body: some View {
@@ -49,15 +48,6 @@ struct SettingsView: View {
                         icon: "square.grid.2x2.fill",
                         title: "Manage categories",
                         action: { showManageCategories = true }
-                    )
-                }
-                
-                // Motion section
-                settingsSection(title: "Motion") {
-                    settingsToggleRow(
-                        icon: "motion.sensor.fill",
-                        title: "Reduced motion",
-                        isOn: $reducedMotion
                     )
                 }
                 

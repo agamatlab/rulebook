@@ -12,7 +12,10 @@ struct MainTabView: View {
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            // Content area
+            // Content area with solid background to prevent white flash
+            themeManager.backgroundPrimary
+                .ignoresSafeArea()
+            
             Group {
                 switch selectedTab {
                 case 0:
@@ -52,7 +55,7 @@ struct MainTabView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(themeManager.backgroundPrimary)
+            .transition(.opacity)
             
             // Custom floating tab bar
             VStack(spacing: 0) {
