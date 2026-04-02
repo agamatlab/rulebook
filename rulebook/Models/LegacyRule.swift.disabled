@@ -1,0 +1,180 @@
+import Foundation
+import SwiftUI
+
+// MARK: - Rule Model
+// Represents an implementation intention: "If X happens, I'll do Y"
+
+struct Rule: Identifiable, Codable, Hashable {
+    let id: UUID
+    var statement: String
+    var ifCondition: String
+    var thenAction: String
+    var reason: String?
+    var category: LegacyRuleCategory
+    var triggers: [RuleTrigger]
+    var createdAt: Date
+    var lastCheckedAt: Date?
+    var status: LegacyRuleStatus
+    var checkIns: [LegacyCheckIn]
+    
+    init(
+        id: UUID = UUID(),
+        statement: String,
+        ifCondition: String,
+        thenAction: String,
+        reason: String? = nil,
+        category: LegacyRuleCategory,
+        triggers: [RuleTrigger] = [],
+        createdAt: Date = Date(),
+        lastCheckedAt: Date? = nil,
+        status: LegacyRuleStatus = .active,
+        checkIns: [LegacyCheckIn] = []
+    ) {
+        self.id = id
+        self.statement = statement
+        self.ifCondition = ifCondition
+        self.thenAction = thenAction
+        self.reason = reason
+        self.category = category
+        self.triggers = triggers
+        self.createdAt = createdAt
+        self.lastCheckedAt = lastCheckedAt
+        self.status = status
+        self.checkIns = checkIns
+    }
+    
+    var fullIfThenStatement: String {
+        "If \(ifCondition), then \(thenAction)."
+    }
+    
+    var isRelevantNow: Bool {
+        triggers.contains { $0.isActiveNow() }
+    }
+}
+
+// MARK: - Rule Category (Legacy)
+
+enum LegacyRuleCategory: String, Codable, CaseIterable {
+    case money = "Money"
+    case work = "Work"
+    case health = "Health"
+    case social = "Social"
+    case home = "Home"
+    
+    var symbolName: String {
+        switch self {
+        case .money: return "dollarsign.circle"
+        case .work: return "briefcase"
+        case .health: return "heart"
+        case .social: return "person.2"
+        case .home: return "house"
+        }
+    }
+}
+
+// MARK: - Rule Status (Legacy)
+
+enum LegacyRuleStatus: String, Codable {
+    case active = "Active"
+    case paused = "Paused"
+    case archived = "Archived"
+}
+
+// MARK: - Rule Trigger
+
+enum RuleTrigger: Codable, Hashable {
+    case timeOfDay(hour: Int, minute: Int)
+    case dayOfWeek([Int]) // 1 = Sunday, 7 = Saturday
+    case location(latitude: Double, longitude: Double, radius: Double)
+    case spending
+    case workContext
+    case custom(String)
+    
+    func isActiveNow() -> Bool {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        switch self {
+        case .timeOfDay(let hour, let minute):
+            let components = calendar.dateComponents([.hour, .minute], from: now)
+            return components.hour == hour && components.minute == minute
+            
+        case .dayOfWeek(let days):
+            let weekday = calendar.component(.weekday, from: now)
+            return days.contains(weekday)
+            
+        case .spending, .workContext, .custom:
+            // These require external context
+            return false
+            
+        case .location:
+            // Requires location services
+            return false
+        }
+    }
+    
+    var displayName: String {
+        switch self {
+        case .timeOfDay(let hour, let minute):
+            return String(format: "%02d:%02d", hour, minute)
+        case .dayOfWeek(let days):
+            let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+            return days.map { dayNames[$0 - 1] }.joined(separator: ", ")
+        case .spending:
+            return "Before spending"
+        case .workContext:
+            return "During work"
+        case .location:
+            return "At location"
+        case .custom(let name):
+            return name
+        }
+    }
+}
+
+// MARK: - Check-In (Legacy)
+
+struct LegacyCheckIn: Identifiable, Codable, Hashable {
+    let id: UUID
+    let date: Date
+    let kept: Bool
+    let note: String?
+    
+    init(id: UUID = UUID(), date: Date = Date(), kept: Bool, note: String? = nil) {
+        self.id = id
+        self.date = date
+        self.kept = kept
+        self.note = note
+    }
+}
+
+// MARK: - Sample Data
+
+extension Rule {
+    static let samples: [Rule] = [
+        Rule(
+            statement: "Sleep before midnight on weekdays",
+            ifCondition: "it's a weekday night",
+            thenAction: "I start winding down by 11:15",
+            reason: "To sleep better",
+            category: .health,
+            triggers: [.dayOfWeek([2, 3, 4, 5, 6]), .timeOfDay(hour: 23, minute: 0)]
+        ),
+        Rule(
+            statement: "Don't buy tech impulsively",
+            ifCondition: "I want to buy new tech",
+            thenAction: "I wait 48 hours before deciding",
+            reason: "To avoid impulse purchases",
+            category: .money,
+            triggers: [.spending]
+        ),
+        Rule(
+            statement: "Never skip workouts twice",
+            ifCondition: "I feel like cancelling a workout",
+            thenAction: "I do at least 15 minutes",
+            reason: "To maintain consistency",
+            category: .health,
+            triggers: [.custom("Workout time")]
+        )
+    ]
+}

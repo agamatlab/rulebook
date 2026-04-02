@@ -1,0 +1,23 @@
+import SwiftUI
+
+// MARK: - Personal Rulebook App (Legacy)
+// Alternative app entry point - not used
+
+// @main - Commented out because RulebookApp is the main entry point
+struct PersonalRulebookApp: App {
+    @StateObject private var viewModel = RulebookViewModel()
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    
+    var body: some Scene {
+        WindowGroup {
+            if hasCompletedOnboarding {
+                HomeView()
+                    .environmentObject(viewModel)
+            } else {
+                WelcomeView {
+                    hasCompletedOnboarding = true
+                }
+            }
+        }
+    }
+}

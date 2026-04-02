@@ -1,0 +1,93 @@
+import SwiftUI
+
+// MARK: - Welcome Screen
+// Nearly empty. Calm authority. Soft entrance.
+
+struct WelcomeView: View {
+    @State private var appeared = false
+    let onContinue: () -> Void
+    
+    var body: some View {
+        ZStack {
+            DesignSystem.PersonalRulebook.background
+                .ignoresSafeArea()
+            
+            VStack(spacing: DesignSystem.Spacing.xl) {
+                Spacer()
+                
+                // Small outline icon
+                Image(systemName: DesignSystem.Symbols.bookClosed)
+                    .font(.system(size: 60))
+                    .foregroundStyle(DesignSystem.PersonalRulebook.primaryAccent)
+                    .opacity(appeared ? 1 : 0)
+                    .scaleEffect(appeared ? 1 : 0.8)
+                    .animation(
+                        .spring(response: 0.6, dampingFraction: 0.7),
+                        value: appeared
+                    )
+                
+                // Large title
+                VStack(spacing: DesignSystem.Spacing.sm) {
+                    Text("Keep promises")
+                        .font(DesignSystem.Typography.largeTitle)
+                        .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+                    
+                    Text("to yourself")
+                        .font(DesignSystem.Typography.largeTitle)
+                        .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+                }
+                .opacity(appeared ? 1 : 0)
+                .offset(y: appeared ? 0 : 10)
+                .animation(
+                    .spring(response: 0.6, dampingFraction: 0.7)
+                    .delay(0.15),
+                    value: appeared
+                )
+                
+                // Support text
+                Text("A place for the rules that make\nrepeated decisions easier.")
+                    .font(DesignSystem.Typography.body)
+                    .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .opacity(appeared ? 1 : 0)
+                    .animation(
+                        .spring(response: 0.6, dampingFraction: 0.7)
+                        .delay(0.3),
+                        value: appeared
+                    )
+                
+                Spacer()
+                
+                // Primary button
+                Button(action: {
+                    MotionSystem.tapFeedback()
+                    onContinue()
+                }) {
+                    Text("Create first rule")
+                        .font(DesignSystem.Typography.headline)
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, DesignSystem.Spacing.md)
+                        .background(DesignSystem.PersonalRulebook.primaryAccent)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md))
+                }
+                .padding(.horizontal, DesignSystem.Spacing.xl)
+                .opacity(appeared ? 1 : 0)
+                .offset(y: appeared ? 0 : 20)
+                .animation(
+                    .spring(response: 0.6, dampingFraction: 0.7)
+                    .delay(0.45),
+                    value: appeared
+                )
+                .padding(.bottom, DesignSystem.Spacing.xl)
+            }
+        }
+        .onAppear {
+            appeared = true
+        }
+    }
+}
+
+#Preview {
+    WelcomeView(onContinue: {})
+}

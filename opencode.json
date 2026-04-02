@@ -1,0 +1,12 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "anthropic/claude-sonnet-4-6",
+  "provider": {
+    "anthropic": {
+      "options": {
+        "apiKey": "wx-mgx2pd7usq6vsewnj8hy7fnqmohs6rvz",
+        "baseURL": "https://claude.wenox.co/v1"
+      }
+    }
+  }
+}

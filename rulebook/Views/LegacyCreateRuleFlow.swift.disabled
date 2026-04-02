@@ -1,0 +1,396 @@
+import SwiftUI
+
+// MARK: - Create Rule Flow
+// Staged sheet with 5 steps. Feels like writing a principle, not filling a form.
+// Each step slides upward and cross-fades.
+
+struct CreateRuleFlow: View {
+    @ObservedObject var viewModel: RulebookViewModel
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var currentStep = 1
+    @State private var statement = ""
+    @State private var selectedTriggers: [RuleTrigger] = []
+    @State private var ifCondition = ""
+    @State private var thenAction = ""
+    @State private var reason = ""
+    @State private var selectedCategory: RuleCategory = .health
+    
+    private let totalSteps = 5
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                DesignSystem.PersonalRulebook.background
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    // Progress indicator
+                    progressIndicator
+                        .padding(.top, DesignSystem.Spacing.md)
+                    
+                    // Step content
+                    stepContent
+                        .padding(.horizontal, DesignSystem.Spacing.lg)
+                    
+                    Spacer()
+                    
+                    // Navigation buttons
+                    navigationButtons
+                        .padding(.horizontal, DesignSystem.Spacing.lg)
+                        .padding(.bottom, DesignSystem.Spacing.xl)
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Progress Indicator
+    
+    private var progressIndicator: some View {
+        HStack(spacing: DesignSystem.Spacing.xs) {
+            ForEach(1...totalSteps, id: \.self) { step in
+                Capsule()
+                    .fill(step <= currentStep ?
+                          DesignSystem.PersonalRulebook.primaryAccent :
+                            Color.gray.opacity(0.2))
+                    .frame(height: 3)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: currentStep)
+            }
+        }
+        .padding(.horizontal, DesignSystem.Spacing.lg)
+    }
+    
+    // MARK: - Step Content
+    
+    @ViewBuilder
+    private var stepContent: some View {
+        Group {
+            switch currentStep {
+            case 1:
+                step1RuleStatement
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .leading).combined(with: .opacity)
+                    ))
+            case 2:
+                step2Category
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .leading).combined(with: .opacity)
+                    ))
+            case 3:
+                step3Trigger
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .leading).combined(with: .opacity)
+                    ))
+            case 4:
+                step4IfThen
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .leading).combined(with: .opacity)
+                    ))
+            case 5:
+                step5Why
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .leading).combined(with: .opacity)
+                    ))
+            default:
+                EmptyView()
+            }
+        }
+        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: currentStep)
+    }
+    
+    // MARK: - Step 1: Rule Statement
+    
+    private var step1RuleStatement: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
+            Text("What rule do you want to keep?")
+                .font(DesignSystem.Typography.title2)
+                .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+                .padding(.top, DesignSystem.Spacing.xxl)
+            
+            TextField("", text: $statement, prompt: Text("e.g., Don't buy tech impulsively"))
+                .font(DesignSystem.Typography.title3)
+                .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+                .padding(DesignSystem.Spacing.md)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md))
+            
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                Text("Examples:")
+                    .font(DesignSystem.Typography.caption)
+                    .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+                
+                exampleText("Sleep before midnight on weekdays")
+                exampleText("Never skip workouts twice")
+                exampleText("Wait before big purchases")
+            }
+        }
+    }
+    
+    // MARK: - Step 2: Category
+    
+    private var step2Category: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
+            Text("What area of life?")
+                .font(DesignSystem.Typography.title2)
+                .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+                .padding(.top, DesignSystem.Spacing.xxl)
+            
+            VStack(spacing: DesignSystem.Spacing.sm) {
+                ForEach(RuleCategory.allCases, id: \.self) { category in
+                    categoryButton(category)
+                }
+            }
+        }
+    }
+    
+    private func categoryButton(_ category: RuleCategory) -> some View {
+        Button(action: {
+            MotionSystem.tapFeedback()
+            selectedCategory = category
+        }) {
+            HStack(spacing: DesignSystem.Spacing.md) {
+                Image(systemName: category.symbolName)
+                    .font(.system(size: 20))
+                    .frame(width: 24)
+                
+                Text(category.rawValue)
+                    .font(DesignSystem.Typography.headline)
+                
+                Spacer()
+                
+                if selectedCategory == category {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(DesignSystem.PersonalRulebook.primaryAccent)
+                }
+            }
+            .foregroundStyle(selectedCategory == category ?
+                           DesignSystem.PersonalRulebook.primaryAccent :
+                            DesignSystem.PersonalRulebook.textPrimary)
+            .padding(DesignSystem.Spacing.md)
+            .background(
+                selectedCategory == category ?
+                DesignSystem.PersonalRulebook.primaryAccent.opacity(0.1) :
+                    Color.clear
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md)
+                    .stroke(selectedCategory == category ?
+                           DesignSystem.PersonalRulebook.primaryAccent :
+                            Color.gray.opacity(0.2), lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md))
+        }
+    }
+    
+    // MARK: - Step 3: Trigger
+    
+    private var step3Trigger: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
+            Text("When should this rule appear?")
+                .font(DesignSystem.Typography.title2)
+                .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+                .padding(.top, DesignSystem.Spacing.xxl)
+            
+            VStack(spacing: DesignSystem.Spacing.sm) {
+                triggerOption("On weeknights", .dayOfWeek([2, 3, 4, 5, 6]))
+                triggerOption("Before spending", .spending)
+                triggerOption("During work", .workContext)
+            }
+        }
+    }
+    
+    private func triggerOption(_ label: String, _ trigger: RuleTrigger) -> some View {
+        Button(action: {
+            MotionSystem.tapFeedback()
+            if selectedTriggers.contains(trigger) {
+                selectedTriggers.removeAll { $0 == trigger }
+            } else {
+                selectedTriggers.append(trigger)
+            }
+        }) {
+            HStack {
+                Text(label)
+                    .font(DesignSystem.Typography.headline)
+                
+                Spacer()
+                
+                if selectedTriggers.contains(trigger) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(DesignSystem.PersonalRulebook.primaryAccent)
+                }
+            }
+            .foregroundStyle(selectedTriggers.contains(trigger) ?
+                           DesignSystem.PersonalRulebook.primaryAccent :
+                            DesignSystem.PersonalRulebook.textPrimary)
+            .padding(DesignSystem.Spacing.md)
+            .background(
+                selectedTriggers.contains(trigger) ?
+                DesignSystem.PersonalRulebook.primaryAccent.opacity(0.1) :
+                    Color.clear
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md)
+                    .stroke(selectedTriggers.contains(trigger) ?
+                           DesignSystem.PersonalRulebook.primaryAccent :
+                            Color.gray.opacity(0.2), lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md))
+        }
+    }
+    
+    // MARK: - Step 4: If-Then
+    
+    private var step4IfThen: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
+            Text("Turn it into a plan")
+                .font(DesignSystem.Typography.title2)
+                .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+                .padding(.top, DesignSystem.Spacing.xxl)
+            
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+                HStack(alignment: .top, spacing: DesignSystem.Spacing.xs) {
+                    Text("If")
+                        .font(DesignSystem.Typography.headline)
+                        .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+                        .frame(width: 30, alignment: .leading)
+                    
+                    TextField("", text: $ifCondition, prompt: Text("I want to buy new tech"))
+                        .font(DesignSystem.Typography.body)
+                        .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+                        .padding(DesignSystem.Spacing.md)
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md))
+                }
+                
+                HStack(alignment: .top, spacing: DesignSystem.Spacing.xs) {
+                    Text("Then")
+                        .font(DesignSystem.Typography.headline)
+                        .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+                        .frame(width: 30, alignment: .leading)
+                    
+                    TextField("", text: $thenAction, prompt: Text("I wait 48 hours before deciding"))
+                        .font(DesignSystem.Typography.body)
+                        .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+                        .padding(DesignSystem.Spacing.md)
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md))
+                }
+            }
+        }
+    }
+    
+    // MARK: - Step 5: Why
+    
+    private var step5Why: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
+            Text("Why do you want this rule?")
+                .font(DesignSystem.Typography.title2)
+                .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+                .padding(.top, DesignSystem.Spacing.xxl)
+            
+            TextField("", text: $reason, prompt: Text("To avoid impulse purchases"))
+                .font(DesignSystem.Typography.body)
+                .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+                .padding(DesignSystem.Spacing.md)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md))
+            
+            Text("Optional, but powerful")
+                .font(DesignSystem.Typography.caption)
+                .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+        }
+    }
+    
+    // MARK: - Navigation Buttons
+    
+    private var navigationButtons: some View {
+        HStack(spacing: DesignSystem.Spacing.md) {
+            if currentStep > 1 {
+                Button(action: {
+                    MotionSystem.tapFeedback()
+                    withAnimation {
+                        currentStep -= 1
+                    }
+                }) {
+                    Text("Back")
+                        .font(DesignSystem.Typography.headline)
+                        .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, DesignSystem.Spacing.md)
+                        .background(Color.gray.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md))
+                }
+            }
+            
+            Button(action: {
+                MotionSystem.tapFeedback()
+                if currentStep < totalSteps {
+                    withAnimation {
+                        currentStep += 1
+                    }
+                } else {
+                    saveRule()
+                }
+            }) {
+                Text(currentStep < totalSteps ? "Continue" : "Save Rule")
+                    .font(DesignSystem.Typography.headline)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, DesignSystem.Spacing.md)
+                    .background(canProceed ? DesignSystem.PersonalRulebook.primaryAccent : Color.gray)
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md))
+            }
+            .disabled(!canProceed)
+        }
+    }
+    
+    // MARK: - Helpers
+    
+    private var canProceed: Bool {
+        switch currentStep {
+        case 1: return !statement.isEmpty
+        case 2: return true
+        case 3: return !selectedTriggers.isEmpty
+        case 4: return !ifCondition.isEmpty && !thenAction.isEmpty
+        case 5: return true
+        default: return false
+        }
+    }
+    
+    private func saveRule() {
+        let newRule = Rule(
+            statement: statement,
+            ifCondition: ifCondition,
+            thenAction: thenAction,
+            reason: reason.isEmpty ? nil : reason,
+            category: selectedCategory,
+            triggers: selectedTriggers
+        )
+        viewModel.addRule(newRule)
+        dismiss()
+    }
+    
+    private func exampleText(_ text: String) -> some View {
+        Text("• \(text)")
+            .font(DesignSystem.Typography.footnote)
+            .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary.opacity(0.7))
+    }
+}
+
+#Preview {
+    CreateRuleFlow(viewModel: RulebookViewModel())
+}

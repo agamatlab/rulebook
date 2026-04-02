@@ -1,0 +1,11 @@
+# Appfile - Configuration for your app
+
+# Your Apple ID email
+app_identifier("com.rulebook.app") # Your app's bundle identifier
+apple_id("aghamatlabakberzade@gmail.com") # Your Apple ID
+
+# Team ID (found in Apple Developer Portal)
+team_id("3NFUYR892M") # Your Team ID
+
+# iTunes Connect Team ID
+itc_team_id("128734233") # Your iTunes Connect Team ID

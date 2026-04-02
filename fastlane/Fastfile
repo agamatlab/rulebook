@@ -1,0 +1,95 @@
+# Fastfile - Automation lanes for your app
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:ios)
+
+platform :ios do
+  
+  # Lane for running tests
+  desc "Run tests"
+  lane :test do
+    run_tests(
+      scheme: "Rulebook",
+      devices: ["iPhone 15 Pro"]
+    )
+  end
+
+  # Lane for building the app
+  desc "Build the app"
+  lane :build do
+    gym(
+      scheme: "Rulebook",
+      export_method: "app-store",
+      clean: true,
+      project: "../rulebook.xcodeproj"
+    )
+  end
+
+  # Lane for uploading to TestFlight
+  desc "Upload to TestFlight"
+  lane :beta do
+    # Increment build number
+    increment_build_number(xcodeproj: "../rulebook.xcodeproj")
+    
+    # Build the app
+    gym(
+      scheme: "Rulebook",
+      export_method: "app-store",
+      clean: true,
+      project: "../rulebook.xcodeproj"
+    )
+    
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  # Lane for releasing to App Store
+  desc "Release to App Store"
+  lane :release do
+    # Increment build number
+    increment_build_number(xcodeproj: "../rulebook.xcodeproj")
+    
+    # Build the app
+    gym(
+      scheme: "Rulebook",
+      export_method: "app-store",
+      clean: true,
+      project: "../rulebook.xcodeproj"
+    )
+    
+    # Upload to App Store
+    upload_to_app_store(
+      submit_for_review: false,
+      automatic_release: false,
+      skip_metadata: false,
+      skip_screenshots: false,
+      precheck_include_in_app_purchases: false
+    )
+  end
+
+  # Lane for taking screenshots
+  desc "Take screenshots"
+  lane :screenshots do
+    snapshot
+  end
+
+  # Lane for code signing with match
+  desc "Sync code signing"
+  lane :sync_signing do
+    match(
+      type: "appstore",
+      readonly: true
+    )
+  end
+
+  # Error handling
+  error do |lane, exception|
+    # Handle errors here
+    puts "Error in lane #{lane}: #{exception.message}"
+  end
+
+end

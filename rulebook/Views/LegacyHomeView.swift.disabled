@@ -1,0 +1,164 @@
+import SwiftUI
+
+// MARK: - Home Screen
+// Main page. Useful immediately. Three sections: Relevant now, All rules, Reflection strip.
+
+struct HomeView: View {
+    @StateObject private var viewModel = RulebookViewModel()
+    @State private var showingCreateRule = false
+    @State private var selectedRule: Rule?
+    @Namespace private var namespace
+    
+    var body: some View {
+        NavigationStack {
+            ZStack(alignment: .bottom) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: DesignSystem.Spacing.xl) {
+                        // Context strip
+                        contextStrip
+                            .padding(.horizontal, DesignSystem.Spacing.md)
+                        
+                        // Section A: Relevant now
+                        if !viewModel.relevantNowRules.isEmpty {
+                            relevantNowSection
+                        }
+                        
+                        // Section B: All rules
+                        allRulesSection
+                        
+                        // Section C: Reflection strip
+                        reflectionStrip
+                            .padding(.horizontal, DesignSystem.Spacing.md)
+                        
+                        Spacer(minLength: 80) // Space for floating button
+                    }
+                    .padding(.top, DesignSystem.Spacing.md)
+                    .bottomBreathing()
+                }
+                
+                // Floating action button
+                floatingActionButton
+            }
+            .background(DesignSystem.PersonalRulebook.background)
+            .navigationTitle("Your Rules")
+            .navigationBarTitleDisplayMode(.large)
+            .sheet(isPresented: $showingCreateRule) {
+                CreateRuleFlow(viewModel: viewModel)
+            }
+            .sheet(item: $selectedRule) { rule in
+                RuleDetailView(rule: rule, viewModel: viewModel)
+            }
+        }
+    }
+    
+    // MARK: - Context Strip
+    
+    private var contextStrip: some View {
+        Text(viewModel.contextMessage)
+            .font(DesignSystem.Typography.subheadline)
+            .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+    }
+    
+    // MARK: - Relevant Now Section
+    
+    private var relevantNowSection: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            Text("Relevant now")
+                .font(DesignSystem.Typography.title3)
+                .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+                .padding(.horizontal, DesignSystem.Spacing.md)
+            
+            ForEach(Array(viewModel.relevantNowRules.enumerated()), id: \.element.id) { index, rule in
+                Button(action: {
+                    MotionSystem.tapFeedback()
+                    selectedRule = rule
+                }) {
+                    RuleCard(rule: rule)
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, DesignSystem.Spacing.md)
+                .listEntrance(index: index)
+            }
+        }
+    }
+    
+    // MARK: - All Rules Section
+    
+    private var allRulesSection: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
+            ForEach(RuleCategory.allCases, id: \.self) { category in
+                if let rules = viewModel.rulesByCategory[category], !rules.isEmpty {
+                    categorySection(category: category, rules: rules)
+                }
+            }
+        }
+    }
+    
+    private func categorySection(category: RuleCategory, rules: [Rule]) -> some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            // Category header
+            HStack(spacing: DesignSystem.Spacing.xs) {
+                Image(systemName: category.symbolName)
+                    .font(.system(size: 14))
+                Text(category.rawValue)
+                    .font(DesignSystem.Typography.subheadline)
+            }
+            .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+            .padding(.horizontal, DesignSystem.Spacing.md)
+            
+            // Rules in category
+            ForEach(rules) { rule in
+                Button(action: {
+                    MotionSystem.tapFeedback()
+                    selectedRule = rule
+                }) {
+                    RuleCard(rule: rule, showCategory: false)
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, DesignSystem.Spacing.md)
+            }
+        }
+    }
+    
+    // MARK: - Reflection Strip
+    
+    private var reflectionStrip: some View {
+        let insights = viewModel.weeklyInsights()
+        
+        return VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+            Text("You followed \(insights.rulesKept) of \(insights.rulesKept + insights.rulesSkipped) relevant rules this week.")
+                .font(DesignSystem.Typography.callout)
+                .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+        }
+        .padding(DesignSystem.Spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .softCard()
+    }
+    
+    // MARK: - Floating Action Button
+    
+    private var floatingActionButton: some View {
+        Button(action: {
+            MotionSystem.tapFeedback()
+            showingCreateRule = true
+        }) {
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                Image(systemName: DesignSystem.Symbols.plus)
+                    .font(.system(size: 16, weight: .semibold))
+                Text("New Rule")
+                    .font(DesignSystem.Typography.headline)
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, DesignSystem.Spacing.lg)
+            .padding(.vertical, DesignSystem.Spacing.md)
+            .background(DesignSystem.PersonalRulebook.primaryAccent)
+            .clipShape(Capsule())
+            .shadow(color: .black.opacity(0.1), radius: 8, y: 4)
+        }
+        .padding(.bottom, DesignSystem.Spacing.xl)
+    }
+}
+
+#Preview {
+    HomeView()
+}

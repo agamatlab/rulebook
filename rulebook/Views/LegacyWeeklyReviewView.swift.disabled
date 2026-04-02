@@ -1,0 +1,116 @@
+import SwiftUI
+
+// MARK: - Weekly Review Screen
+// One page only. Calm metrics. Forgiving tone.
+
+struct WeeklyReviewView: View {
+    @ObservedObject var viewModel: RulebookViewModel
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xl) {
+                    // Metrics cards
+                    metricsSection
+                    
+                    // Reflection
+                    reflectionSection
+                    
+                    Spacer(minLength: 40)
+                }
+                .padding(DesignSystem.Spacing.md)
+                .bottomBreathing()
+            }
+            .background(DesignSystem.PersonalRulebook.background)
+            .navigationTitle("This week")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Metrics Section
+    
+    private var metricsSection: some View {
+        let insights = viewModel.weeklyInsights()
+        
+        return VStack(spacing: DesignSystem.Spacing.md) {
+            metricCard(
+                value: "\(insights.rulesKept)",
+                label: "Rules kept",
+                color: DesignSystem.PersonalRulebook.secondaryAccent
+            )
+            
+            metricCard(
+                value: "\(insights.rulesSkipped)",
+                label: "Rules skipped",
+                color: DesignSystem.PersonalRulebook.textSecondary
+            )
+            
+            metricCard(
+                value: "\(insights.momentsThatMattered)",
+                label: "Moments that mattered",
+                color: DesignSystem.PersonalRulebook.primaryAccent
+            )
+        }
+    }
+    
+    private func metricCard(value: String, label: String, color: Color) -> some View {
+        HStack(spacing: DesignSystem.Spacing.md) {
+            Text(value)
+                .font(.system(size: 48, weight: .bold, design: .rounded))
+                .foregroundStyle(color)
+            
+            Spacer()
+            
+            Text(label)
+                .font(DesignSystem.Typography.title3)
+                .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+                .multilineTextAlignment(.trailing)
+        }
+        .padding(DesignSystem.Spacing.lg)
+        .softCard()
+    }
+    
+    // MARK: - Reflection Section
+    
+    private var reflectionSection: some View {
+        let insights = viewModel.weeklyInsights()
+        
+        return VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            Text("Reflection")
+                .font(DesignSystem.Typography.title3)
+                .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+            
+            Text(insights.reflection)
+                .font(DesignSystem.Typography.body)
+                .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+                .padding(DesignSystem.Spacing.lg)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .softCard()
+            
+            // Action button
+            Button(action: {
+                // Navigate to adjust rules
+            }) {
+                Text("Adjust a rule")
+                    .font(DesignSystem.Typography.headline)
+                    .foregroundStyle(DesignSystem.PersonalRulebook.primaryAccent)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, DesignSystem.Spacing.md)
+                    .background(DesignSystem.PersonalRulebook.primaryAccent.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md))
+            }
+        }
+    }
+}
+
+#Preview {
+    WeeklyReviewView(viewModel: RulebookViewModel())
+}

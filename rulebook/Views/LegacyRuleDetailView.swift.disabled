@@ -1,0 +1,228 @@
+import SwiftUI
+
+// MARK: - Rule Detail View
+// Feels like opening a single page in a personal manual.
+// Opens with zoom or matched transition from home card.
+
+struct RuleDetailView: View {
+    let rule: Rule
+    @ObservedObject var viewModel: RulebookViewModel
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var showingEditSheet = false
+    @State private var showingDeleteAlert = false
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: DesignSystem.Spacing.xl) {
+                    // Hero card with full rule
+                    heroCard
+                    
+                    // Details sections
+                    detailsSection
+                    
+                    // How it's going
+                    performanceSection
+                    
+                    Spacer(minLength: 40)
+                }
+                .padding(DesignSystem.Spacing.md)
+                .bottomBreathing()
+            }
+            .background(DesignSystem.PersonalRulebook.background)
+            .navigationTitle(rule.statement)
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        Button(action: { showingEditSheet = true }) {
+                            Label("Edit", systemImage: "pencil")
+                        }
+                        
+                        Button(action: {
+                            if rule.status == .paused {
+                                viewModel.resumeRule(rule)
+                            } else {
+                                viewModel.pauseRule(rule)
+                            }
+                        }) {
+                            Label(rule.status == .paused ? "Resume" : "Pause rule",
+                                  systemImage: rule.status == .paused ? "play" : "pause")
+                        }
+                        
+                        Divider()
+                        
+                        Button(role: .destructive, action: { showingDeleteAlert = true }) {
+                            Label("Archive", systemImage: "archivebox")
+                        }
+                    } label: {
+                        Image(systemName: DesignSystem.Symbols.ellipsis)
+                            .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+                    }
+                }
+            }
+            .alert("Archive this rule?", isPresented: $showingDeleteAlert) {
+                Button("Cancel", role: .cancel) {}
+                Button("Archive", role: .destructive) {
+                    viewModel.archiveRule(rule)
+                    dismiss()
+                }
+            } message: {
+                Text("You can always create it again later.")
+            }
+        }
+    }
+    
+    // MARK: - Hero Card
+    
+    private var heroCard: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            // Category and status chips
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                categoryChip
+                
+                if rule.isRelevantNow {
+                    statusChip
+                }
+            }
+            
+            // Full if-then statement
+            Text(rule.fullIfThenStatement)
+                .font(DesignSystem.Typography.title3)
+                .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(DesignSystem.Spacing.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .softCard()
+    }
+    
+    private var categoryChip: some View {
+        HStack(spacing: DesignSystem.Spacing.xs) {
+            Image(systemName: rule.category.symbolName)
+                .font(.system(size: 12))
+            Text(rule.category.rawValue)
+                .font(DesignSystem.Typography.caption)
+        }
+        .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+        .padding(.horizontal, DesignSystem.Spacing.sm)
+        .padding(.vertical, DesignSystem.Spacing.xs)
+        .background(Color.gray.opacity(0.1))
+        .clipShape(Capsule())
+    }
+    
+    private var statusChip: some View {
+        Text("Active now")
+            .font(DesignSystem.Typography.caption)
+            .foregroundStyle(DesignSystem.PersonalRulebook.primaryAccent)
+            .padding(.horizontal, DesignSystem.Spacing.sm)
+            .padding(.vertical, DesignSystem.Spacing.xs)
+            .background(DesignSystem.PersonalRulebook.primaryAccent.opacity(0.1))
+            .clipShape(Capsule())
+    }
+    
+    // MARK: - Details Section
+    
+    private var detailsSection: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
+            // When it appears
+            detailRow(
+                title: "When it appears",
+                content: rule.triggers.map { $0.displayName }.joined(separator: ", ")
+            )
+            
+            // Why it matters
+            if let reason = rule.reason {
+                detailRow(title: "Why it matters", content: reason)
+            }
+        }
+    }
+    
+    private func detailRow(title: String, content: String) -> some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+            Text(title)
+                .font(DesignSystem.Typography.subheadline)
+                .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+            
+            Text(content)
+                .font(DesignSystem.Typography.body)
+                .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+        }
+        .padding(DesignSystem.Spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .softCard()
+    }
+    
+    // MARK: - Performance Section
+    
+    private var performanceSection: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            Text("How it's going")
+                .font(DesignSystem.Typography.title3)
+                .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+            
+            let weekCheckIns = recentCheckIns()
+            let kept = weekCheckIns.filter { $0.kept }.count
+            let skipped = weekCheckIns.filter { !$0.kept }.count
+            
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+                if kept > 0 {
+                    performanceRow(
+                        text: "Kept \(kept) \(kept == 1 ? "time" : "times") this week",
+                        color: DesignSystem.PersonalRulebook.secondaryAccent
+                    )
+                }
+                
+                if skipped > 0 {
+                    performanceRow(
+                        text: "Skipped \(skipped) \(skipped == 1 ? "time" : "times")",
+                        color: DesignSystem.PersonalRulebook.textSecondary
+                    )
+                }
+                
+                if kept == 0 && skipped == 0 {
+                    Text("No check-ins yet this week")
+                        .font(DesignSystem.Typography.body)
+                        .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+                }
+            }
+            .padding(DesignSystem.Spacing.md)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .softCard()
+        }
+    }
+    
+    private func performanceRow(text: String, color: Color) -> some View {
+        HStack(spacing: DesignSystem.Spacing.xs) {
+            Circle()
+                .fill(color)
+                .frame(width: 6, height: 6)
+            
+            Text(text)
+                .font(DesignSystem.Typography.body)
+                .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+        }
+    }
+    
+    // MARK: - Helpers
+    
+    private func recentCheckIns() -> [CheckIn] {
+        let calendar = Calendar.current
+        let now = Date()
+        guard let weekAgo = calendar.date(byAdding: .day, value: -7, to: now) else {
+            return []
+        }
+        return rule.checkIns.filter { $0.date >= weekAgo }
+    }
+}
+
+#Preview {
+    RuleDetailView(rule: Rule.samples[0], viewModel: RulebookViewModel())
+}

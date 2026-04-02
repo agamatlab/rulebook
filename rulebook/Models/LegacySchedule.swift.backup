@@ -1,0 +1,77 @@
+import Foundation
+
+/// Defines when a rule should be scheduled (Legacy enum-based schedule)
+enum LegacySchedule: Codable, Equatable, Hashable {
+    case everyDay
+    case weekdays
+    case weekends
+    case specificDays([Int]) // 1 = Sunday, 2 = Monday, ..., 7 = Saturday
+    case timeBased
+    case contextBased
+    
+    /// Check if this schedule applies on a given date
+    /// - Parameters:
+    ///   - date: The date to check
+    ///   - calendar: Calendar to use for date calculations (defaults to current)
+    /// - Returns: True if the rule is scheduled for this date
+    func appliesOn(date: Date, calendar: Calendar = .current) -> Bool {
+        let weekday = calendar.component(.weekday, from: date)
+        
+        switch self {
+        case .everyDay:
+            return true
+            
+        case .weekdays:
+            return weekday >= 2 && weekday <= 6 // Monday-Friday
+            
+        case .weekends:
+            return weekday == 1 || weekday == 7 // Sunday or Saturday
+            
+        case .specificDays(let days):
+            return days.contains(weekday)
+            
+        case .timeBased:
+            // Time-based rules are always "scheduled" - completion depends on time context
+            return true
+            
+        case .contextBased:
+            // Context-based rules are always "scheduled" - completion depends on context
+            return true
+        }
+    }
+    
+    /// Human-readable display name for the schedule type
+    var displayName: String {
+        switch self {
+        case .everyDay:
+            return "Every Day"
+            
+        case .weekdays:
+            return "Weekdays"
+            
+        case .weekends:
+            return "Weekends"
+            
+        case .specificDays(let days):
+            let dayNames = days.sorted().map { dayNumber in
+                switch dayNumber {
+                case 1: return "Sun"
+                case 2: return "Mon"
+                case 3: return "Tue"
+                case 4: return "Wed"
+                case 5: return "Thu"
+                case 6: return "Fri"
+                case 7: return "Sat"
+                default: return ""
+                }
+            }
+            return dayNames.joined(separator: ", ")
+            
+        case .timeBased:
+            return "Time-Based"
+            
+        case .contextBased:
+            return "Context-Based"
+        }
+    }
+}

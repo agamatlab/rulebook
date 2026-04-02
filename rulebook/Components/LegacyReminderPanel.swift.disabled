@@ -1,0 +1,125 @@
+import SwiftUI
+
+// MARK: - Reminder Panel
+// Appears when trigger occurs. Supportive, not parental.
+// Rises from bottom with soft material background.
+
+struct ReminderPanel: View {
+    let rule: Rule
+    let onKeep: () -> Void
+    let onSkip: () -> Void
+    let onMute: () -> Void
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var appeared = false
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+            
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
+                // Header
+                HStack {
+                    Image(systemName: rule.category.symbolName)
+                        .font(.system(size: 24))
+                        .foregroundStyle(DesignSystem.PersonalRulebook.primaryAccent)
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        MotionSystem.tapFeedback()
+                        dismiss()
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+                    }
+                }
+                
+                // Title
+                Text("Before you decide")
+                    .font(DesignSystem.Typography.title2)
+                    .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+                
+                // Rule statement
+                Text("Your rule for \(rule.category.rawValue.lowercased()) is active right now.")
+                    .font(DesignSystem.Typography.body)
+                    .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+                
+                // Full if-then
+                Text(rule.fullIfThenStatement)
+                    .font(DesignSystem.Typography.headline)
+                    .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+                    .padding(DesignSystem.Spacing.md)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(DesignSystem.PersonalRulebook.primaryAccent.opacity(0.05))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md))
+                
+                // Actions
+                VStack(spacing: DesignSystem.Spacing.sm) {
+                    // Primary: Keep
+                    Button(action: {
+                        MotionSystem.tapFeedback()
+                        onKeep()
+                        dismiss()
+                    }) {
+                        Text("Keep this rule")
+                            .font(DesignSystem.Typography.headline)
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, DesignSystem.Spacing.md)
+                            .background(DesignSystem.PersonalRulebook.primaryAccent)
+                            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md))
+                    }
+                    
+                    // Secondary: Skip
+                    Button(action: {
+                        MotionSystem.tapFeedback()
+                        onSkip()
+                        dismiss()
+                    }) {
+                        Text("Skip once")
+                            .font(DesignSystem.Typography.body)
+                            .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, DesignSystem.Spacing.sm)
+                    }
+                    
+                    // Tertiary: Mute
+                    Button(action: {
+                        MotionSystem.tapFeedback()
+                        onMute()
+                        dismiss()
+                    }) {
+                        Text("Mute today")
+                            .font(DesignSystem.Typography.caption)
+                            .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary.opacity(0.7))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, DesignSystem.Spacing.xs)
+                    }
+                }
+            }
+            .padding(DesignSystem.Spacing.lg)
+            .background(.ultraThickMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.xl))
+            .shadow(color: .black.opacity(0.2), radius: 20, y: -5)
+            .padding(DesignSystem.Spacing.md)
+            .offset(y: appeared ? 0 : 400)
+            .animation(.spring(response: 0.5, dampingFraction: 0.8), value: appeared)
+        }
+        .background(Color.black.opacity(appeared ? 0.3 : 0))
+        .ignoresSafeArea()
+        .onAppear {
+            appeared = true
+        }
+    }
+}
+
+#Preview {
+    ReminderPanel(
+        rule: Rule.samples[1],
+        onKeep: {},
+        onSkip: {},
+        onMute: {}
+    )
+}

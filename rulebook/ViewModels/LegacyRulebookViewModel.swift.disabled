@@ -1,0 +1,170 @@
+import Foundation
+import SwiftUI
+import Combine
+
+// MARK: - Rulebook View Model
+// Manages rules, check-ins, and weekly insights
+
+@MainActor
+class RulebookViewModel: ObservableObject {
+    @Published var rules: [Rule] = []
+    @Published var selectedRule: Rule?
+    @Published var isCreatingRule = false
+    
+    private let storageKey = "personal_rulebook_rules"
+    
+    init() {
+        loadRules()
+    }
+    
+    // MARK: - Computed Properties
+    
+    var activeRules: [Rule] {
+        rules.filter { $0.status == .active }
+    }
+    
+    var relevantNowRules: [Rule] {
+        activeRules.filter { $0.isRelevantNow }
+    }
+    
+    var rulesByCategory: [RuleCategory: [Rule]] {
+        Dictionary(grouping: activeRules, by: { $0.category })
+    }
+    
+    var contextMessage: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        let relevantCount = relevantNowRules.count
+        
+        if hour >= 20 {
+            return "Tonight · \(relevantCount) \(relevantCount == 1 ? "rule" : "rules") likely to matter"
+        } else if hour >= 17 {
+            return "This evening · \(relevantCount) \(relevantCount == 1 ? "rule" : "rules") likely to matter"
+        } else if hour >= 12 {
+            return "This afternoon · \(relevantCount) \(relevantCount == 1 ? "rule" : "rules") likely to matter"
+        } else {
+            return "This morning · \(relevantCount) \(relevantCount == 1 ? "rule" : "rules") likely to matter"
+        }
+    }
+    
+    // MARK: - Weekly Insights
+    
+    func weeklyInsights() -> WeeklyInsights {
+        let calendar = Calendar.current
+        let now = Date()
+        guard let weekAgo = calendar.date(byAdding: .day, value: -7, to: now) else {
+            return WeeklyInsights(rulesKept: 0, rulesSkipped: 0, momentsThatMattered: 0, reflection: "")
+        }
+        
+        var keptCount = 0
+        var skippedCount = 0
+        var categoryPerformance: [RuleCategory: (kept: Int, skipped: Int)] = [:]
+        
+        for rule in activeRules {
+            let weekCheckIns = rule.checkIns.filter { $0.date >= weekAgo }
+            let kept = weekCheckIns.filter { $0.kept }.count
+            let skipped = weekCheckIns.filter { !$0.kept }.count
+            
+            keptCount += kept
+            skippedCount += skipped
+            
+            let current = categoryPerformance[rule.category] ?? (kept: 0, skipped: 0)
+            categoryPerformance[rule.category] = (kept: current.kept + kept, skipped: current.skipped + skipped)
+        }
+        
+        // Generate reflection
+        var reflection = ""
+        if let bestCategory = categoryPerformance.max(by: { $0.value.kept < $1.value.kept }) {
+            reflection = "Your \(bestCategory.key.rawValue.lowercased()) rules were easiest to keep."
+        }
+        
+        if let worstCategory = categoryPerformance.max(by: { $0.value.skipped < $1.value.skipped }),
+           worstCategory.value.skipped > 0 {
+            if !reflection.isEmpty {
+                reflection += " "
+            }
+            reflection += "Your \(worstCategory.key.rawValue.lowercased()) rules slipped late in the week."
+        }
+        
+        return WeeklyInsights(
+            rulesKept: keptCount,
+            rulesSkipped: skippedCount,
+            momentsThatMattered: keptCount + skippedCount,
+            reflection: reflection.isEmpty ? "Keep building your practice." : reflection
+        )
+    }
+    
+    // MARK: - Rule Management
+    
+    func addRule(_ rule: Rule) {
+        rules.append(rule)
+        saveRules()
+    }
+    
+    func updateRule(_ rule: Rule) {
+        if let index = rules.firstIndex(where: { $0.id == rule.id }) {
+            rules[index] = rule
+            saveRules()
+        }
+    }
+    
+    func deleteRule(_ rule: Rule) {
+        rules.removeAll { $0.id == rule.id }
+        saveRules()
+    }
+    
+    func archiveRule(_ rule: Rule) {
+        var updatedRule = rule
+        updatedRule.status = .archived
+        updateRule(updatedRule)
+    }
+    
+    func pauseRule(_ rule: Rule) {
+        var updatedRule = rule
+        updatedRule.status = .paused
+        updateRule(updatedRule)
+    }
+    
+    func resumeRule(_ rule: Rule) {
+        var updatedRule = rule
+        updatedRule.status = .active
+        updateRule(updatedRule)
+    }
+    
+    // MARK: - Check-Ins
+    
+    func recordCheckIn(for rule: Rule, kept: Bool, note: String? = nil) {
+        var updatedRule = rule
+        let checkIn = CheckIn(kept: kept, note: note)
+        updatedRule.checkIns.append(checkIn)
+        updatedRule.lastCheckedAt = Date()
+        updateRule(updatedRule)
+    }
+    
+    // MARK: - Persistence
+    
+    private func saveRules() {
+        if let encoded = try? JSONEncoder().encode(rules) {
+            UserDefaults.standard.set(encoded, forKey: storageKey)
+        }
+    }
+    
+    private func loadRules() {
+        if let data = UserDefaults.standard.data(forKey: storageKey),
+           let decoded = try? JSONDecoder().decode([Rule].self, from: data) {
+            rules = decoded
+        } else {
+            // Load sample data for first launch
+            rules = Rule.samples
+            saveRules()
+        }
+    }
+}
+
+// MARK: - Weekly Insights Model
+
+struct WeeklyInsights {
+    let rulesKept: Int
+    let rulesSkipped: Int
+    let momentsThatMattered: Int
+    let reflection: String
+}

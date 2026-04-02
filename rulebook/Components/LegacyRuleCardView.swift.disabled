@@ -1,0 +1,364 @@
+import SwiftUI
+
+struct RuleCardView: View {
+    let rule: Rule
+    let schedule: LegacySchedule
+    let todayStatus: TodayStatus
+    let successDefinition: String?
+    let onComplete: () -> Void
+    
+    @Environment(\.themeManager) private var themeManager
+    @State private var isPressed = false
+    
+    enum TodayStatus {
+        case activeToday
+        case completedToday
+        case missedToday
+        case paused
+        case archivedPreview
+        
+        var showsCompletionControl: Bool {
+            self == .activeToday
+        }
+    }
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Left: Content
+            VStack(alignment: .leading, spacing: 10) {
+                // Category icon badge + chips row
+                HStack(spacing: 8) {
+                    categoryIconBadge
+                    scheduleChip
+                    statusChip
+                    Spacer()
+                }
+                
+                // Rule title
+                Text(rule.statement)
+                    .font(.system(size: 17, weight: .semibold, design: .default))
+                    .foregroundStyle(themeManager.textPrimary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                
+                // Optional success definition
+                if let successDefinition = successDefinition {
+                    Text(successDefinition)
+                        .font(.system(size: 14, weight: .regular))
+                        .foregroundStyle(themeManager.textSecondary)
+                        .lineLimit(1)
+                }
+            }
+            
+            Spacer(minLength: 12)
+            
+            // Right: Completion control or badge
+            completionControl
+        }
+        .padding(16)
+        .background(cardBackground)
+        .overlay(cardStroke)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
+    }
+    
+    // MARK: - Category Icon Badge
+    
+    private var categoryIconBadge: some View {
+        ZStack {
+            Circle()
+                .fill(themeManager.accentSoft)
+                .frame(width: 32, height: 32)
+            
+            Image(systemName: rule.category.symbolName)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(themeManager.accent)
+        }
+    }
+    
+    // MARK: - Schedule Chip
+    
+    private var scheduleChip: some View {
+        Text(schedule.displayName)
+            .font(.system(size: 12, weight: .medium))
+            .foregroundStyle(themeManager.textSecondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                Capsule()
+                    .fill(themeManager.stroke.opacity(0.5))
+            )
+    }
+    
+    // MARK: - Status Chip
+    
+    @ViewBuilder
+    private var statusChip: some View {
+        if todayStatus == .paused {
+            Text("Paused")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(themeManager.warning)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule()
+                        .fill(themeManager.warning.opacity(0.15))
+                )
+        } else if todayStatus == .archivedPreview {
+            Text("Archived")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(themeManager.textSecondary.opacity(0.7))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule()
+                        .fill(themeManager.stroke.opacity(0.5))
+                )
+        }
+    }
+    
+    // MARK: - Completion Control
+    
+    @ViewBuilder
+    private var completionControl: some View {
+        switch todayStatus {
+        case .activeToday:
+            Button(action: {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                    onComplete()
+                }
+            }) {
+                Circle()
+                    .strokeBorder(themeManager.accent.opacity(0.4), lineWidth: 2)
+                    .frame(width: 28, height: 28)
+            }
+            .buttonStyle(CompletionButtonStyle(isPressed: $isPressed))
+            
+        case .completedToday:
+            ZStack {
+                Circle()
+                    .fill(themeManager.success.opacity(0.15))
+                    .frame(width: 28, height: 28)
+                
+                Image(systemName: "checkmark")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(themeManager.success)
+            }
+            
+        case .missedToday:
+            ZStack {
+                Circle()
+                    .fill(themeManager.calendarMissed.opacity(0.1))
+                    .frame(width: 28, height: 28)
+                
+                Image(systemName: "xmark")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(themeManager.calendarMissed.opacity(0.6))
+            }
+            
+        case .paused, .archivedPreview:
+            EmptyView()
+        }
+    }
+    
+    // MARK: - Card Styling
+    
+    private var cardBackground: some View {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(backgroundFill)
+    }
+    
+    private var backgroundFill: Color {
+        switch todayStatus {
+        case .activeToday:
+            return themeManager.accent.opacity(0.03)
+        case .completedToday:
+            return themeManager.success.opacity(0.04)
+        case .missedToday:
+            return themeManager.surface
+        case .paused:
+            return themeManager.warning.opacity(0.02)
+        case .archivedPreview:
+            return themeManager.surface.opacity(0.5)
+        }
+    }
+    
+    private var cardStroke: some View {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .strokeBorder(strokeColor, lineWidth: 1)
+    }
+    
+    private var strokeColor: Color {
+        switch todayStatus {
+        case .activeToday:
+            return themeManager.accent.opacity(0.15)
+        case .completedToday:
+            return themeManager.success.opacity(0.2)
+        case .missedToday:
+            return themeManager.stroke
+        case .paused:
+            return themeManager.warning.opacity(0.2)
+        case .archivedPreview:
+            return themeManager.stroke.opacity(0.5)
+        }
+    }
+}
+
+// MARK: - Completion Button Style
+
+struct CompletionButtonStyle: ButtonStyle {
+    @Binding var isPressed: Bool
+    
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.9 : 1.0)
+            .animation(.spring(response: 0.2, dampingFraction: 0.6), value: configuration.isPressed)
+            .onChange(of: configuration.isPressed) { newValue in
+                isPressed = newValue
+            }
+    }
+}
+
+// MARK: - Previews
+
+#Preview("Active Today") {
+    RuleCardView(
+        rule: Rule(
+            statement: "Sleep before midnight on weekdays",
+            ifCondition: "it's a weekday night",
+            thenAction: "I start winding down by 11:15",
+            reason: "To sleep better",
+            category: .health,
+            status: .active
+        ),
+        schedule: .weekdays,
+        todayStatus: .activeToday,
+        successDefinition: "In bed by 11:45pm",
+        onComplete: {}
+    )
+    .padding()
+    .background(Color(.systemGroupedBackground))
+}
+
+#Preview("Completed Today") {
+    RuleCardView(
+        rule: Rule(
+            statement: "Never skip workouts twice",
+            ifCondition: "I feel like cancelling a workout",
+            thenAction: "I do at least 15 minutes",
+            category: .health,
+            status: .active
+        ),
+        schedule: .everyDay,
+        todayStatus: .completedToday,
+        successDefinition: "15+ min workout completed",
+        onComplete: {}
+    )
+    .padding()
+    .background(Color(.systemGroupedBackground))
+}
+
+#Preview("Missed Today") {
+    RuleCardView(
+        rule: Rule(
+            statement: "Don't buy tech impulsively",
+            ifCondition: "I want to buy new tech",
+            thenAction: "I wait 48 hours before deciding",
+            category: .money,
+            status: .active
+        ),
+        schedule: .everyDay,
+        todayStatus: .missedToday,
+        successDefinition: nil,
+        onComplete: {}
+    )
+    .padding()
+    .background(Color(.systemGroupedBackground))
+}
+
+#Preview("Paused") {
+    RuleCardView(
+        rule: Rule(
+            statement: "Meditate for 10 minutes",
+            ifCondition: "I wake up",
+            thenAction: "I meditate before checking my phone",
+            category: .health,
+            status: .paused
+        ),
+        schedule: .everyDay,
+        todayStatus: .paused,
+        successDefinition: "10 min meditation",
+        onComplete: {}
+    )
+    .padding()
+    .background(Color(.systemGroupedBackground))
+}
+
+#Preview("Archived Preview") {
+    RuleCardView(
+        rule: Rule(
+            statement: "No social media before 9am",
+            ifCondition: "I wake up",
+            thenAction: "I avoid social media until 9am",
+            category: .social,
+            status: .archived
+        ),
+        schedule: .weekdays,
+        todayStatus: .archivedPreview,
+        successDefinition: nil,
+        onComplete: {}
+    )
+    .padding()
+    .background(Color(.systemGroupedBackground))
+}
+
+#Preview("List View") {
+    ScrollView {
+        VStack(spacing: 12) {
+            RuleCardView(
+                rule: Rule(
+                    statement: "Sleep before midnight on weekdays",
+                    ifCondition: "it's a weekday night",
+                    thenAction: "I start winding down by 11:15",
+                    category: .health,
+                    status: .active
+                ),
+                schedule: .weekdays,
+                todayStatus: .activeToday,
+                successDefinition: "In bed by 11:45pm",
+                onComplete: {}
+            )
+            
+            RuleCardView(
+                rule: Rule(
+                    statement: "Never skip workouts twice",
+                    ifCondition: "I feel like cancelling",
+                    thenAction: "I do at least 15 minutes",
+                    category: .health,
+                    status: .active
+                ),
+                schedule: .everyDay,
+                todayStatus: .completedToday,
+                successDefinition: "15+ min workout",
+                onComplete: {}
+            )
+            
+            RuleCardView(
+                rule: Rule(
+                    statement: "Meditate for 10 minutes",
+                    ifCondition: "I wake up",
+                    thenAction: "I meditate before checking phone",
+                    category: .health,
+                    status: .paused
+                ),
+                schedule: .everyDay,
+                todayStatus: .paused,
+                successDefinition: "10 min meditation",
+                onComplete: {}
+            )
+        }
+        .padding()
+    }
+    .background(Color(.systemGroupedBackground))
+}

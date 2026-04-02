@@ -1,0 +1,30 @@
+    var body: some View {
+        Button(action: {
+            MotionSystem.tapFeedback()
+            onTap()
+        }) {
+            VStack(alignment: .leading, spacing: 12) {
+                iconBadge
+                categoryInfo
+                
+                if !isEmpty {
+                    monthlySummary
+                    weekPreviewRow
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, minHeight: 160)
+            .background(tileBackground)
+            .overlay(tileStroke)
+            .overlay(selectionGlow)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(TileButtonStyle(isPressed: $isPressed))
+        .disabled(isDisabled)
+        .opacity(isDisabled ? 0.5 : 1.0)
+        .onChange(of: isSelected) { newValue in
+            if newValue {
+                animateSelectionGlow()
+            }
+        }
+    }

@@ -1,0 +1,19 @@
+# Matchfile - Configuration for code signing with match
+
+# Git URL for storing certificates and profiles
+git_url("https://github.com/agamatlab/rulebook-certificates") # Your certificates repo
+
+# Storage mode (git, google_cloud, s3, gitlab_secure_files)
+storage_mode("git")
+
+# App identifier
+app_identifier(["com.rulebook.app"]) # Your app's bundle identifier
+
+# Your Apple ID
+username("aghamatlabakberzade@gmail.com") # Your Apple ID
+
+# Team ID
+team_id("3NFUYR892M") # Your Team ID
+
+# Type of provisioning profile (appstore, adhoc, development, enterprise)
+type("appstore")

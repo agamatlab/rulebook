@@ -1,0 +1,86 @@
+import SwiftUI
+
+// MARK: - Rule Card Component
+// Wide card with icon, title, if-then line, and status chip
+
+struct RuleCard: View {
+    let rule: Rule
+    let showCategory: Bool
+    @Namespace private var namespace
+    
+    init(rule: Rule, showCategory: Bool = false) {
+        self.rule = rule
+        self.showCategory = showCategory
+    }
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: DesignSystem.Spacing.md) {
+            // Icon
+            Image(systemName: rule.category.symbolName)
+                .font(.system(size: 24))
+                .foregroundStyle(DesignSystem.PersonalRulebook.primaryAccent)
+                .frame(width: 32, height: 32)
+            
+            // Content
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                Text(rule.statement)
+                    .font(DesignSystem.Typography.headline)
+                    .foregroundStyle(DesignSystem.PersonalRulebook.textPrimary)
+                
+                Text(rule.fullIfThenStatement)
+                    .font(DesignSystem.Typography.caption)
+                    .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+                    .lineLimit(2)
+            }
+            
+            Spacer()
+            
+            // Status chip
+            if rule.isRelevantNow {
+                Text(contextChip)
+                    .font(DesignSystem.Typography.caption)
+                    .foregroundStyle(DesignSystem.PersonalRulebook.primaryAccent)
+                    .padding(.horizontal, DesignSystem.Spacing.sm)
+                    .padding(.vertical, DesignSystem.Spacing.xs)
+                    .background(
+                        DesignSystem.PersonalRulebook.primaryAccent.opacity(0.1)
+                    )
+                    .clipShape(Capsule())
+            } else if showCategory {
+                Text(rule.category.rawValue)
+                    .font(DesignSystem.Typography.caption)
+                    .foregroundStyle(DesignSystem.PersonalRulebook.textSecondary)
+                    .padding(.horizontal, DesignSystem.Spacing.sm)
+                    .padding(.vertical, DesignSystem.Spacing.xs)
+                    .background(
+                        Color.gray.opacity(0.1)
+                    )
+                    .clipShape(Capsule())
+            }
+        }
+        .padding(DesignSystem.Spacing.md)
+        .softCard()
+    }
+    
+    private var contextChip: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        if hour >= 20 {
+            return "Tonight"
+        } else if hour >= 17 {
+            return "This evening"
+        } else if hour >= 12 {
+            return "This afternoon"
+        } else {
+            return "This morning"
+        }
+    }
+}
+
+#Preview {
+    VStack(spacing: DesignSystem.Spacing.md) {
+        RuleCard(rule: Rule.samples[0])
+        RuleCard(rule: Rule.samples[1], showCategory: true)
+    }
+    .padding()
+    .background(DesignSystem.PersonalRulebook.background)
+}
