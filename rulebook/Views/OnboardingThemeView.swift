@@ -236,6 +236,7 @@ struct OnboardingThemeView: View {
                         .datePickerStyle(.wheel)
                         .labelsHidden()
                         .frame(maxWidth: .infinity)
+                        .colorScheme(.light)
                 }
                 .padding(16)
                 .background(themeManager.surface)

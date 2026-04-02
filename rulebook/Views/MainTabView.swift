@@ -24,34 +24,44 @@ struct MainTabView: View {
                             .environmentObject(themeManager)
                             .environmentObject(appState)
                             .environmentObject(appState.categoryManager)
+                            .background(themeManager.backgroundPrimary)
                     }
+                    .background(themeManager.backgroundPrimary)
                 case 1:
                     NavigationStack {
                         CategoriesView()
                             .environmentObject(themeManager)
                             .environmentObject(appState)
                             .environmentObject(appState.categoryManager)
+                            .background(themeManager.backgroundPrimary)
                     }
+                    .background(themeManager.backgroundPrimary)
                 case 2:
                     NavigationStack {
                         ReviewView()
                             .environmentObject(themeManager)
                             .environmentObject(appState)
                             .environmentObject(appState.categoryManager)
+                            .background(themeManager.backgroundPrimary)
                     }
+                    .background(themeManager.backgroundPrimary)
                 case 3:
                     NavigationStack {
                         SettingsView()
                             .environmentObject(themeManager)
                             .environmentObject(appState)
+                            .background(themeManager.backgroundPrimary)
                     }
+                    .background(themeManager.backgroundPrimary)
                 default:
                     NavigationStack {
                         TodayView()
                             .environmentObject(themeManager)
                             .environmentObject(appState)
                             .environmentObject(appState.categoryManager)
+                            .background(themeManager.backgroundPrimary)
                     }
+                    .background(themeManager.backgroundPrimary)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
