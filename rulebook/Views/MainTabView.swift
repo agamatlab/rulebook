@@ -196,8 +196,11 @@ private struct CategoriesView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                // Header with manage button
+                // Title header
                 HStack {
+                    Text("Categories")
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundStyle(themeManager.textPrimary)
                     Spacer()
                     
                     Button(action: { showManageCategories = true }) {
@@ -215,7 +218,8 @@ private struct CategoriesView: View {
                     }
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 8)
+                .padding(.top, 16)
+                .padding(.bottom, 8)
                 
                 // Sort options
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -277,8 +281,6 @@ private struct CategoriesView: View {
             }
         }
         .background(themeManager.backgroundPrimary)
-        .navigationTitle("Categories")
-        .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showManageCategories) {
             ManageCategoriesView()
                 .environmentObject(themeManager)
