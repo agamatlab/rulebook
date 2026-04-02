@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 struct OnboardingThemeView: View {
     let onComplete: () -> Void
@@ -7,6 +8,9 @@ struct OnboardingThemeView: View {
     @EnvironmentObject private var appState: AppState
     
     @State private var selectedTheme: AppTheme = .sageCalm
+    @State private var showNotificationPermission = false
+    @State private var enableNotifications = false
+    @State private var notificationTime = Date()
     
     private let columns = [
         GridItem(.flexible(), spacing: 16),
@@ -15,25 +19,32 @@ struct OnboardingThemeView: View {
     ]
     
     var body: some View {
-        VStack(spacing: 0) {
-            headerSection
-            
-            ScrollView {
-                VStack(spacing: 32) {
-                    livePreview
-                    
-                    themeSwatchGrid
+        ZStack {
+            VStack(spacing: 0) {
+                headerSection
+                
+                ScrollView {
+                    VStack(spacing: 32) {
+                        livePreview
+                        
+                        themeSwatchGrid
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 24)
+                    .padding(.bottom, 100)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 24)
-                .padding(.bottom, 100)
+                
+                Spacer()
+                
+                continueButton
             }
+            .background(themeManager.backgroundPrimary.ignoresSafeArea())
             
-            Spacer()
-            
-            continueButton
+            // Notification permission overlay
+            if showNotificationPermission {
+                notificationPermissionView
+            }
         }
-        .background(themeManager.backgroundPrimary.ignoresSafeArea())
     }
     
     // MARK: - Header
@@ -186,6 +197,87 @@ struct OnboardingThemeView: View {
         }
     }
     
+    // MARK: - Notification Permission View
+    
+    private var notificationPermissionView: some View {
+        ZStack {
+            Color.black.opacity(0.4)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        showNotificationPermission = false
+                    }
+                }
+            
+            VStack(spacing: 24) {
+                VStack(spacing: 12) {
+                    Image(systemName: "bell.badge")
+                        .font(.system(size: 48, weight: .medium))
+                        .foregroundStyle(themeManager.accent)
+                    
+                    Text("Stay on track with reminders")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(themeManager.textPrimary)
+                        .multilineTextAlignment(.center)
+                    
+                    Text("Get a daily reminder to check in on your rules")
+                        .font(.system(size: 15, weight: .regular))
+                        .foregroundStyle(themeManager.textSecondary)
+                        .multilineTextAlignment(.center)
+                }
+                
+                // Time picker
+                VStack(spacing: 12) {
+                    Text("Reminder time")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(themeManager.textSecondary)
+                    
+                    DatePicker("", selection: $notificationTime, displayedComponents: .hourAndMinute)
+                        .datePickerStyle(.wheel)
+                        .labelsHidden()
+                        .frame(maxWidth: .infinity)
+                }
+                .padding(16)
+                .background(themeManager.surface)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                
+                VStack(spacing: 12) {
+                    Button(action: {
+                        enableNotifications = true
+                        requestNotificationPermission()
+                    }) {
+                        Text("Enable reminders")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 54)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .fill(themeManager.accent)
+                            )
+                    }
+                    
+                    Button(action: {
+                        enableNotifications = false
+                        completeOnboarding()
+                    }) {
+                        Text("Skip for now")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(themeManager.textSecondary)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 44)
+                    }
+                }
+            }
+            .padding(24)
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(themeManager.backgroundPrimary)
+            )
+            .padding(.horizontal, 32)
+        }
+    }
+    
     // MARK: - Continue Button
     
     private var continueButton: some View {
@@ -221,9 +313,47 @@ struct OnboardingThemeView: View {
     private func handleComplete() {
         // Set the theme
         themeManager.setTheme(selectedTheme, animated: true)
-        // Complete onboarding
-        appState.completeOnboarding()
-        onComplete()
+        // Show notification permission
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+            showNotificationPermission = true
+        }
+    }
+    
+    private func requestNotificationPermission() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            DispatchQueue.main.async {
+                if granted {
+                    // Schedule daily notification
+                    scheduleDailyNotification()
+                }
+                completeOnboarding()
+            }
+        }
+    }
+    
+    private func scheduleDailyNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = "Time to check in"
+        content.body = "How did you do with your rules today?"
+        content.sound = .default
+        
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.hour, .minute], from: notificationTime)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+        
+        let request = UNNotificationRequest(identifier: "dailyCheckIn", content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request)
+    }
+    
+    private func completeOnboarding() {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+            showNotificationPermission = false
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            appState.completeOnboarding()
+            onComplete()
+        }
     }
 }
 

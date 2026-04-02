@@ -82,7 +82,7 @@ struct AllRulesView: View {
         }
         .background(themeManager.backgroundPrimary)
         .navigationTitle("All Rules")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
     }
     
     private func ruleCard(_ rule: NewRule) -> some View {

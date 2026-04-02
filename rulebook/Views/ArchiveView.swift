@@ -36,7 +36,7 @@ struct ArchiveView: View {
         }
         .background(themeManager.backgroundPrimary)
         .navigationTitle("Archive")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .alert("Delete permanently?", isPresented: $showDeleteConfirmation, presenting: ruleToDelete) { rule in
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {

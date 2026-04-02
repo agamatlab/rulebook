@@ -78,7 +78,7 @@ struct ReviewView: View {
         }
         .background(themeManager.backgroundPrimary)
         .navigationTitle("Review")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             calculateStats()
             generateInsights()

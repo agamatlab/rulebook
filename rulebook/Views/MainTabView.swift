@@ -12,61 +12,62 @@ struct MainTabView: View {
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            TabView(selection: $selectedTab) {
-                NavigationStack {
-                    TodayView()
-                        .environmentObject(themeManager)
-                        .environmentObject(appState)
-                        .environmentObject(appState.categoryManager)
-                }
-                .tag(0)
-                .tabItem {
-                    Image(systemName: "calendar")
-                    Text("Today")
-                }
-                
-                NavigationStack {
-                    CategoriesView()
-                        .environmentObject(themeManager)
-                        .environmentObject(appState)
-                        .environmentObject(appState.categoryManager)
-                }
-                .tag(1)
-                .tabItem {
-                    Image(systemName: "square.grid.2x2")
-                    Text("Categories")
-                }
-                
-                NavigationStack {
-                    ReviewView()
-                        .environmentObject(themeManager)
-                        .environmentObject(appState)
-                        .environmentObject(appState.categoryManager)
-                }
-                .tag(2)
-                .tabItem {
-                    Image(systemName: "chart.bar")
-                    Text("Review")
-                }
-                
-                NavigationStack {
-                    SettingsView()
-                        .environmentObject(themeManager)
-                        .environmentObject(appState)
-                }
-                .tag(3)
-                .tabItem {
-                    Image(systemName: "gearshape")
-                    Text("Settings")
+            // Content area
+            Group {
+                switch selectedTab {
+                case 0:
+                    NavigationStack {
+                        TodayView()
+                            .environmentObject(themeManager)
+                            .environmentObject(appState)
+                            .environmentObject(appState.categoryManager)
+                    }
+                case 1:
+                    NavigationStack {
+                        CategoriesView()
+                            .environmentObject(themeManager)
+                            .environmentObject(appState)
+                            .environmentObject(appState.categoryManager)
+                    }
+                case 2:
+                    NavigationStack {
+                        ReviewView()
+                            .environmentObject(themeManager)
+                            .environmentObject(appState)
+                            .environmentObject(appState.categoryManager)
+                    }
+                case 3:
+                    NavigationStack {
+                        SettingsView()
+                            .environmentObject(themeManager)
+                            .environmentObject(appState)
+                    }
+                default:
+                    NavigationStack {
+                        TodayView()
+                            .environmentObject(themeManager)
+                            .environmentObject(appState)
+                            .environmentObject(appState.categoryManager)
+                    }
                 }
             }
-            .tint(themeManager.accent)
-            .animation(.easeInOut(duration: 0.2), value: selectedTab)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             
-            // Floating "New Rule" pill button
-            floatingNewRuleButton
-                .padding(.bottom, 60) // Position above tab bar
+            // Custom floating tab bar
+            VStack(spacing: 0) {
+                Spacer()
+                
+                // Floating "New Rule" button
+                floatingNewRuleButton
+                    .padding(.bottom, 16)
+                
+                // Custom tab bar
+                customTabBar
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 34)
+            }
         }
+        .ignoresSafeArea(.keyboard)
         .sheet(isPresented: $showNewRuleSheet) {
             NewRuleFlow { newRule in
                 appState.addRule(newRule)
@@ -74,6 +75,65 @@ struct MainTabView: View {
             .environmentObject(themeManager)
             .environmentObject(appState.categoryManager)
         }
+    }
+    
+    // MARK: - Custom Tab Bar
+    
+    private var customTabBar: some View {
+        HStack(spacing: 0) {
+            ForEach(tabItems.indices, id: \.self) { index in
+                Button(action: {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        selectedTab = index
+                    }
+                }) {
+                    VStack(spacing: 4) {
+                        Image(systemName: tabItems[index].icon)
+                            .font(.system(size: 22, weight: .medium))
+                            .frame(height: 28)
+                        
+                        Text(tabItems[index].title)
+                            .font(.system(size: 11, weight: .medium))
+                    }
+                    .foregroundStyle(selectedTab == index ? themeManager.accent : themeManager.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(TabButtonStyle())
+            }
+        }
+        .background(
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    // Background blur
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .fill(themeManager.surface.opacity(0.95))
+                        .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 10)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                                .strokeBorder(themeManager.stroke.opacity(0.5), lineWidth: 1)
+                        )
+                    
+                    // Sliding bubble indicator
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(themeManager.accentSoft)
+                        .frame(width: geometry.size.width / CGFloat(tabItems.count) - 16, height: 56)
+                        .offset(x: (geometry.size.width / CGFloat(tabItems.count)) * CGFloat(selectedTab) + 8)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selectedTab)
+                }
+            }
+        )
+        .frame(height: 72)
+    }
+    
+    private var tabItems: [(icon: String, title: String)] {
+        [
+            ("calendar", "Today"),
+            ("square.grid.2x2", "Categories"),
+            ("chart.bar", "Review"),
+            ("gearshape", "Settings")
+        ]
     }
     
     // MARK: - Floating Button
@@ -205,7 +265,7 @@ private struct CategoriesView: View {
         }
         .background(themeManager.backgroundPrimary)
         .navigationTitle("Categories")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showManageCategories) {
             ManageCategoriesView()
                 .environmentObject(themeManager)
@@ -390,6 +450,16 @@ private struct FloatingButtonStyle: ButtonStyle {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
+    }
+}
+
+// MARK: - Tab Button Style
+
+private struct TabButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.9 : 1.0)
+            .animation(.spring(response: 0.2, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }
 

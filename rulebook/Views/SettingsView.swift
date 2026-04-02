@@ -86,7 +86,7 @@ struct SettingsView: View {
         }
         .background(themeManager.backgroundPrimary)
         .navigationTitle("Settings")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             // Check authorization status when view appears
             Task {

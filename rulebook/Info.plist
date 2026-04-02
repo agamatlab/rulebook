@@ -2,6 +2,69 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Bundle Identifier -->
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	
+	<!-- Bundle Name -->
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	
+	<!-- Bundle Display Name -->
+	<key>CFBundleDisplayName</key>
+	<string>RuleBook</string>
+	
+	<!-- Bundle Version -->
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	
+	<!-- Bundle Short Version -->
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	
+	<!-- Bundle Executable -->
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	
+	<!-- Bundle Package Type -->
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	
+	<!-- Bundle Signature -->
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	
+	<!-- Supported Platforms -->
+	<key>CFBundleSupportedPlatforms</key>
+	<array>
+		<string>iPhoneOS</string>
+	</array>
+	
+	<!-- Minimum OS Version -->
+	<key>MinimumOSVersion</key>
+	<string>16.0</string>
+	
+	<!-- Launch Storyboard -->
+	<key>UILaunchScreen</key>
+	<dict/>
+	
+	<!-- Supported Interface Orientations -->
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	
+	<!-- Supported Interface Orientations (iPad) -->
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	
 	<!-- App Privacy and Data Usage -->
 	<key>NSUserTrackingUsageDescription</key>
 	<string>We don't track you. This permission is not used.</string>

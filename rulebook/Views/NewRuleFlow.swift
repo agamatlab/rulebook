@@ -195,7 +195,7 @@ struct NewRuleFlow: View {
                         .strokeBorder(themeManager.stroke, lineWidth: 1)
                 )
                 .scrollContentBackground(.hidden)
-                .onChange(of: ruleStatement) { _, newValue in
+                .onChange(of: ruleStatement) { newValue in
                     // Real-time health analysis
                     currentHealthScore = healthAnalyzer.analyze(newValue)
                 }

@@ -57,7 +57,7 @@ struct WeeklyReviewView: View {
         }
         .background(theme.backgroundPrimaryColor)
         .navigationTitle("Weekly Review")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             analyzePatterns()
             analyzeEvolution()

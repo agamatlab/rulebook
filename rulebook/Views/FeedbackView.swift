@@ -336,11 +336,37 @@ struct FeedbackView: View {
     private func submitFeedback() {
         isSubmitting = true
         
-        // TODO: Implement actual feedback submission
-        // This should send the feedback to a backend or email
+        // Prepare feedback email
+        let feedbackText = """
+        Feedback from RuleBook App
         
-        // Simulate network delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+        Useful Categories: \(Array(usefulCategories).joined(separator: ", "))
+        
+        Missing Categories:
+        \(missingCategories.isEmpty ? "None" : missingCategories)
+        
+        Binary Tracking Fair: \(binaryTrackingFair?.label ?? "Not answered")
+        
+        Unclear Parts:
+        \(unclearPart.isEmpty ? "None" : unclearPart)
+        
+        Best Theme: \(bestTheme ?? "Not selected")
+        
+        Hardest Rule to Track:
+        \(hardestRule.isEmpty ? "None" : hardestRule)
+        """
+        
+        // Send email
+        let email = "aghamatlabakberzade@gmail.com"
+        let subject = "RuleBook Feedback"
+        let body = feedbackText.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        
+        if let url = URL(string: "mailto:\(email)?subject=\(subject)&body=\(body)") {
+            UIApplication.shared.open(url)
+        }
+        
+        // Show confirmation
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             isSubmitting = false
             
             withAnimation(.easeInOut(duration: 0.3)) {
