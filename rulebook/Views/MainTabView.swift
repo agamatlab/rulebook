@@ -71,6 +71,7 @@ struct MainTabView: View {
                     .padding(.horizontal, 20)
                     .padding(.bottom, 20)
             }
+            .zIndex(2)
         }
         .ignoresSafeArea(.keyboard)
         .sheet(isPresented: $showNewRuleSheet) {
