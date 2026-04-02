@@ -12,7 +12,7 @@ struct MainTabView: View {
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            // Content area with background
+            // Content area
             Group {
                 switch selectedTab {
                 case 0:
@@ -21,67 +21,7 @@ struct MainTabView: View {
                             .environmentObject(themeManager)
                             .environmentObject(appState)
                             .environmentObject(appState.categoryManager)
-                            .toolbar(.hidden, for: .navigationBar)
                     }
-                case 1:
-                    NavigationStack {
-                        CategoriesView()
-                            .environmentObject(themeManager)
-                            .environmentObject(appState)
-                            .environmentObject(appState.categoryManager)
-                            .toolbar(.hidden, for: .navigationBar)
-                    }
-                case 2:
-                    NavigationStack {
-                        ReviewView()
-                            .environmentObject(themeManager)
-                            .environmentObject(appState)
-                            .environmentObject(appState.categoryManager)
-                            .toolbar(.hidden, for: .navigationBar)
-                    }
-                case 3:
-                    NavigationStack {
-                        SettingsView()
-                            .environmentObject(themeManager)
-                            .environmentObject(appState)
-                            .toolbar(.hidden, for: .navigationBar)
-                    }
-                default:
-                    NavigationStack {
-                        TodayView()
-                            .environmentObject(themeManager)
-                            .environmentObject(appState)
-                            .environmentObject(appState.categoryManager)
-                            .toolbar(.hidden, for: .navigationBar)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(themeManager.backgroundPrimary)
-            
-            // Custom floating tab bar
-            VStack(spacing: 0) {
-                Spacer()
-                
-                // Floating "New Rule" button
-                floatingNewRuleButton
-                    .padding(.bottom, 16)
-                
-                // Custom tab bar
-                customTabBar
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 20)
-            }
-        }
-        .ignoresSafeArea(.keyboard)
-        .sheet(isPresented: $showNewRuleSheet) {
-            NewRuleFlow { newRule in
-                appState.addRule(newRule)
-            }
-            .environmentObject(themeManager)
-            .environmentObject(appState.categoryManager)
-        }
-    }
                 case 1:
                     NavigationStack {
                         CategoriesView()
@@ -113,119 +53,6 @@ struct MainTabView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(themeManager.backgroundPrimary)
-            .id(selectedTab) // Force view recreation to prevent white flicker
-            
-            // Custom floating tab bar
-            VStack(spacing: 0) {
-                Spacer()
-                
-                // Floating "New Rule" button
-                floatingNewRuleButton
-                    .padding(.bottom, 16)
-                
-                // Custom tab bar
-                customTabBar
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 20)
-            }
-        }
-        .ignoresSafeArea(.keyboard)
-        .sheet(isPresented: $showNewRuleSheet) {
-            NewRuleFlow { newRule in
-                appState.addRule(newRule)
-            }
-            .environmentObject(themeManager)
-            .environmentObject(appState.categoryManager)
-        }
-    }
-                case 1:
-                    NavigationStack {
-                        CategoriesView()
-                            .environmentObject(themeManager)
-                            .environmentObject(appState)
-                            .environmentObject(appState.categoryManager)
-                    }
-                case 2:
-                    NavigationStack {
-                        ReviewView()
-                            .environmentObject(themeManager)
-                            .environmentObject(appState)
-                            .environmentObject(appState.categoryManager)
-                    }
-                case 3:
-                    NavigationStack {
-                        SettingsView()
-                            .environmentObject(themeManager)
-                            .environmentObject(appState)
-                    }
-                default:
-                    NavigationStack {
-                        TodayView()
-                            .environmentObject(themeManager)
-                            .environmentObject(appState)
-                            .environmentObject(appState.categoryManager)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(themeManager.backgroundPrimary)
-            .id(selectedTab) // Force view recreation to prevent white flicker
-            
-            // Custom floating tab bar
-            VStack(spacing: 0) {
-                Spacer()
-                
-                // Floating "New Rule" button
-                floatingNewRuleButton
-                    .padding(.bottom, 16)
-                
-                // Custom tab bar
-                customTabBar
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 20)
-            }
-        }
-        .ignoresSafeArea(.keyboard)
-        .sheet(isPresented: $showNewRuleSheet) {
-            NewRuleFlow { newRule in
-                appState.addRule(newRule)
-            }
-            .environmentObject(themeManager)
-            .environmentObject(appState.categoryManager)
-        }
-    }
-                case 1:
-                    NavigationStack {
-                        CategoriesView()
-                            .environmentObject(themeManager)
-                            .environmentObject(appState)
-                            .environmentObject(appState.categoryManager)
-                    }
-                case 2:
-                    NavigationStack {
-                        ReviewView()
-                            .environmentObject(themeManager)
-                            .environmentObject(appState)
-                            .environmentObject(appState.categoryManager)
-                    }
-                case 3:
-                    NavigationStack {
-                        SettingsView()
-                            .environmentObject(themeManager)
-                            .environmentObject(appState)
-                    }
-                default:
-                    NavigationStack {
-                        TodayView()
-                            .environmentObject(themeManager)
-                            .environmentObject(appState)
-                            .environmentObject(appState.categoryManager)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(themeManager.backgroundPrimary)
-            .id(selectedTab) // Force view recreation to prevent white flicker
             
             // Custom floating tab bar
             VStack(spacing: 0) {
